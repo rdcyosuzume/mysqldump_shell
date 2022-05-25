@@ -1,0 +1,50 @@
+#!/bin/bash
+helpcmd="-help"
+setcmd="-set"
+activecmd="-active"
+PATH_NAME=$(pwd)
+DATE=$(date +%Y%m%d)
+PASSWORD="1234"
+reset_all() {
+       $(rm backup)
+       echo "removed backup folder"
+       $(rm mysqldump.sh)
+       echo "removed mysqldump.sh"
+}
+set_sql() {
+       local dbname="$1"
+       local id="$2"
+       local pw="$3"
+       echo "mysqldump -u $id -p$pw $dbname > /backup/mysql_db_bak_\"\$(DATE)\".sql" >> mysqldump.sh
+       echo "add backup setting username : $id / pw : $pw / dbname : $dbname";
+       echo "finished progress"
+}
+if [ $1 == $helpcmd ]
+then
+       echo "make back up folder : -set"
+       echo "auto mode active : -active"
+       echo "add db : ex) ybm dbname id pw"
+elif [ $1 == $setcmd ]
+then
+       echo "order check : make back up folder"
+       $(mkdir backup)
+       echo "mkdir backup"
+       $(chmod 755 backup)
+       echo "chmod 755 for backup folder"
+       echo "finished your order"
+       echo "back up folder is $PATH_NAME / backup"
+elif [ $1 == $activecmd ]
+then
+	echo "======================back up process start =============================="
+       for DB in $(mysql -u root -p${PASSWORD} -e 'show databases' -s --skip-column-names); do
+		echo "$DB database back up now......"
+               mysqldump -u root -p${PASSWORD} $DB > "$(pwd)"/backup/"$DB.sql";
+		echo "$DB backup process is end...!"
+       done
+	echo "모든 데이터 베이스를 $PATH_NAME /backup 에 백업 완료 하였습니다."
+	echo "==========================sqlbackupfile.tar List ================================"
+       tar -civf sqlbackupfile_${DATE}.tar backup/
+	echo "프로세스 종료."
+else
+       echo "please check your order for use this command (-help)"
+fi
